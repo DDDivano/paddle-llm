@@ -41,30 +41,91 @@ def paddle_static():
 
 
 
-def test_paddle_dynamic_vs_torch():
+def test_paddle_dynamic_vs_torch_fp32():
     """
-
+    paddle dynamic vs torch fp32
     :return:
     """
     pass
 
-def test_paddle_static_vs_torch():
-    pass
-
-def test_paddle_dynamic_stability():
+def test_paddle_static_vs_torch_fp32():
     """
-    paddle_dynamic() 多轮
+    paddle static vs torch fp32
     :return:
     """
     pass
 
-def test_paddle_static_stability():
+def test_paddle_dynamic_stability_fp32():
     """
-    paddle_static() 多轮
+    paddle dynamic stability fp32
     :return:
     """
     pass
 
+def test_paddle_static_stability_fp32():
+    """
+    paddle staic stability fp32
+    :return:
+    """
+    pass
+
+
+def test_paddle_dynamic_vs_torch_fp16():
+    """
+    paddle dynamic vs torch fp16
+    :return:
+    """
+    pass
+
+def test_paddle_static_vs_torch_fp16():
+    """
+    paddle static vs torch fp16
+    :return:
+    """
+    pass
+
+def test_paddle_dynamic_stability_fp16():
+    """
+    paddle dynamic stability fp16
+    :return:
+    """
+    pass
+
+def test_paddle_static_stability_fp16():
+    """
+    paddle staic stability fp16
+    :return:
+    """
+    pass
+
+
+def test_paddle_dynamic_vs_torch_bf16():
+    """
+    paddle dynamic vs torch bf16
+    :return:
+    """
+    pass
+
+def test_paddle_static_vs_torch_bf16():
+    """
+    paddle static vs torch bf16
+    :return:
+    """
+    pass
+
+def test_paddle_dynamic_stability_bf16():
+    """
+    paddle dynamic stability bf16
+    :return:
+    """
+    pass
+
+def test_paddle_static_stability_bf16():
+    """
+    paddle staic stability bf16
+    :return:
+    """
+    pass
 if __name__ == '__main__':
     # paddle_dynamic()
     # torch_dynamic()
