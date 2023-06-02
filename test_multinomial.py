@@ -12,7 +12,7 @@ from paddle.utils import map_structure
 import pytest
 
 np.random.seed(33)
-input_data = generate_array(shape=[1, 100352], dtype=np.float32, value_range=(-1, 1))
+input_data = generate_array(shape=[1, 100352], dtype=np.float32, value_range=(0, 1))
 num_samples = 1
 replacement = False
 
@@ -30,7 +30,7 @@ def paddle_dynamic(dtype=np.float32, bf16=False):
     else:
         x = paddle.to_tensor(input)
     x.stop_gradient = False
-    result = paddle.log(x)
+    result = paddle.multinomial(x, num_samples, replacement)
     grad = paddle.grad(result, x)
     if bf16:
         result = paddle.cast(result, dtype="float32")
@@ -50,7 +50,7 @@ def torch_dynamic(dtype=np.float32, bf16=False):
     else:
         x = torch.tensor(input)
     x.requires_grad = True
-    result = torch.log(x)
+    result = torch.multinomial(x, num_samples, replacement)
     result.retain_grad()
     result_sum = result.sum()
     result_sum.backward()
@@ -74,7 +74,7 @@ def paddle_static(dtype=np.float32, bf16=False):
     else:
         x = paddle.to_tensor(input)
     x.stop_gradient = False
-    result = paddle.jit.to_static(paddle.log)(x)
+    result = paddle.jit.to_static(paddle.multinomial)(x, num_samples, replacement)
     grad = paddle.grad(result, x)
     if bf16:
         result = paddle.cast(result, dtype="float32")
@@ -218,6 +218,6 @@ def test_paddle_static_stability_bf16():
 
 if __name__ == '__main__':
     # print(paddle_dynamic())
-    # print(torch_dynamic())
+    print(torch_dynamic())
     # paddle_static()
     pass
