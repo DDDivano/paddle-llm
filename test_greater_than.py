@@ -12,27 +12,41 @@ import pytest
 
 np.random.seed(33)
 input_data = generate_array(shape=[1, 100352], dtype=np.float32, value_range=(-1, 1))
+input_data_gradout = generate_array(shape=[1, 100352], dtype=np.float32, value_range=(-1, 1))
 input_2_data = generate_array(shape=[1, 100352], dtype=np.float32, value_range=(-1, 1))
+input_2_data_gradout = generate_array(shape=[1, 100352], dtype=np.float32, value_range=(-1, 1))
 
 
 def paddle_dynamic(dtype=np.float32, bf16=False):
     if dtype == np.float32:
         input = input_data.astype(np.float32)
+        # input_gradout = input_data_gradout.astype(np.float32)
         y_input = input_2_data.astype(np.float32)
+        # y_input_gradout = input_2_data_gradout.astype(np.float32)
     elif dtype == np.float16:
         input = input_data.astype(np.float16)
+        # input_gradout = input_data_gradout.astype(np.float16)
         y_input = input_2_data.astype(np.float16)
+        # y_input_gradout = input_2_data_gradout.astype(np.float16)
     else:
         input = input_data
+        # input_gradout = input_data_gradout
         y_input = input_2_data
+        # y_input_gradout = input_2_data_gradout
     if bf16:
         x = paddle.to_tensor(input)
         x = paddle.cast(x, dtype="uint16")
+        # x_gradout = paddle.to_tensor(input_gradout)
+        # x_gradout = paddle.cast(x_gradout, dtype="uint16")
         y = paddle.to_tensor(y_input)
         y = paddle.cast(y, dtype="uint16")
+        # y_gradout = paddle.to_tensor(y_input_gradout)
+        # y_gradout = paddle.cast(y_gradout, dtype="uint16")
     else:
         x = paddle.to_tensor(input)
+        # x_gradout = paddle.to_tensor(input_gradout)
         y = paddle.to_tensor(y_input)
+        # y_gradout = paddle.to_tensor(y_input_gradout)
     x.stop_gradient = False
     y.stop_gradient = False
     result = paddle.greater_than(x, y)

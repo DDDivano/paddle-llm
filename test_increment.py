@@ -13,24 +13,31 @@ import pytest
 
 np.random.seed(33)
 input_data = generate_array(shape=[1], dtype=np.float32, value_range=(-1, 1))
+input_data_gradout = generate_array(shape=[1], dtype=np.float32, value_range=(-1, 1))
 value = 1.0
 
 
 def paddle_dynamic(dtype=np.float32, bf16=False):
     if dtype == np.float32:
         input = input_data.astype(np.float32)
+        input_gradout = input_data_gradout.astype(np.float32)
     elif dtype == np.float16:
         input = input_data.astype(np.float16)
+        input_gradout = input_data_gradout.astype(np.float16)
     else:
         input = input_data
+        input_gradout = input_data_gradout
     if bf16:
         x = paddle.to_tensor(input)
         x = paddle.cast(x, dtype="uint16")
+        x_gradout = paddle.to_tensor(input_gradout)
+        x_gradout = paddle.cast(x_gradout, dtype="uint16")
     else:
         x = paddle.to_tensor(input)
+        x_gradout = paddle.to_tensor(input_gradout)
     x.stop_gradient = False
     result = paddle.increment(x, value)
-    grad = paddle.grad(result, x)
+    grad = paddle.grad(result, x, grad_outputs=x_gradout)
     if bf16:
         result = paddle.cast(result, dtype="float32")
         grad = map_structure(lambda x: paddle.cast(x, dtype="float32"), grad)
@@ -39,42 +46,55 @@ def paddle_dynamic(dtype=np.float32, bf16=False):
 def torch_dynamic(dtype=np.float32, bf16=False):
     if dtype == torch.float32:
         input = input_data.astype(np.float32)
+        input_gradout = input_data_gradout.astype(np.float32)
     elif dtype == torch.float16:
         input = input_data.astype(np.float16)
+        input_gradout = input_data_gradout.astype(np.float16)
     else:
         input = input_data
+        input_gradout = input_data_gradout
     if bf16:
         x = torch.tensor(input)
         x = x.to(dtype=torch.bfloat16)
+        x_gradout = torch.tensor(input_gradout)
+        x_gradout = x_gradout.to(dtype=torch.bfloat16)
     else:
         x = torch.tensor(input)
+        x_gradout = torch.tensor(input_gradout)
     x.requires_grad = True
     result = torch.add(x, value)
-    result.retain_grad()
-    result_sum = result.sum()
-    result_sum.backward()
-    grad = x.grad
+    # result.retain_grad()
+    # result_sum = result.sum()
+    # result_sum.backward()
+    # grad = x.grad
+    grad = torch.autograd.grad(result, x, grad_outputs=x_gradout)
     if bf16:
         result = result.to(dtype=torch.float32)
         grad = map_structure(lambda x: x.to(dtype=torch.float32), grad)
-    return result.detach().numpy(), grad.detach().numpy()
+    return result.detach().numpy(), grad[0].detach().numpy()
 
 
 def paddle_static(dtype=np.float32, bf16=False):
     if dtype == np.float32:
         input = input_data.astype(np.float32)
+        input_gradout = input_data_gradout.astype(np.float32)
     elif dtype == np.float16:
         input = input_data.astype(np.float16)
+        input_gradout = input_data_gradout.astype(np.float16)
     else:
         input = input_data
+        input_gradout = input_data_gradout
     if bf16:
         x = paddle.to_tensor(input)
         x = paddle.cast(x, dtype="uint16")
+        x_gradout = paddle.to_tensor(input_gradout)
+        x_gradout = paddle.cast(x_gradout, dtype="uint16")
     else:
         x = paddle.to_tensor(input)
+        x_gradout = paddle.to_tensor(input_gradout)
     x.stop_gradient = False
     result = paddle.jit.to_static(paddle.increment)(x, value)
-    grad = paddle.grad(result, x)
+    grad = paddle.grad(result, x, grad_outputs=x_gradout)
     if bf16:
         result = paddle.cast(result, dtype="float32")
         grad = map_structure(lambda x: paddle.cast(x, dtype="float32"), grad)
