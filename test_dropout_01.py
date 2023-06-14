@@ -12,23 +12,30 @@ import pytest
 
 np.random.seed(33)
 input_data = generate_array(shape=[1, 4096, 2048], dtype=np.float32, value_range=(-1, 1))
+input_data_gradout = generate_array(shape=[1, 4096, 2048], dtype=np.float32, value_range=(-1, 1))
 
 
 def paddle_dynamic(dtype=np.float32, bf16=False):
     if dtype == np.float32:
         input = input_data.astype(np.float32)
+        input_gradout = input_data_gradout.astype(np.float32)
     elif dtype == np.float16:
         input = input_data.astype(np.float16)
+        input_gradout = input_data_gradout.astype(np.float16)
     else:
         input = input_data
+        input_gradout = input_data_gradout
     if bf16:
         x = paddle.to_tensor(input)
         x = paddle.cast(x, dtype="uint16")
+        x_gradout = paddle.to_tensor(input_gradout)
+        x_gradout = paddle.cast(x_gradout, dtype="uint16")
     else:
         x = paddle.to_tensor(input)
+        x_gradout = paddle.to_tensor(input_gradout)
     x.stop_gradient = False
     result = paddle.nn.functional.dropout(x, training=False, mode="upscale_in_train", p=0.1)
-    grad = paddle.grad(result, x)
+    grad = paddle.grad(result, x, grad_outputs=x_gradout)
     if bf16:
         result = paddle.cast(result, dtype="float32")
         grad = map_structure(lambda x: paddle.cast(x, dtype="float32"), grad)
@@ -37,42 +44,55 @@ def paddle_dynamic(dtype=np.float32, bf16=False):
 def torch_dynamic(dtype=np.float32, bf16=False):
     if dtype == torch.float32:
         input = input_data.astype(np.float32)
+        input_gradout = input_data_gradout.astype(np.float32)
     elif dtype == torch.float16:
         input = input_data.astype(np.float16)
+        input_gradout = input_data_gradout.astype(np.float16)
     else:
         input = input_data
+        input_gradout = input_data_gradout
     if bf16:
         x = torch.tensor(input)
         x = x.to(dtype=torch.bfloat16)
+        x_gradout = torch.tensor(input_gradout)
+        x_gradout = x_gradout.to(dtype=torch.bfloat16)
     else:
         x = torch.tensor(input)
+        x_gradout = torch.tensor(input_gradout)
     x.requires_grad = True
     result = torch.nn.functional.dropout(x, training=False, p=0.1)
-    result.retain_grad()
-    result_sum = result.sum()
-    result_sum.backward()
-    grad = x.grad
+    # result.retain_grad()
+    # result_sum = result.sum()
+    # result_sum.backward()
+    # grad = x.grad
+    grad = torch.autograd.grad(result, x, grad_outputs=x_gradout)
     if bf16:
         result = result.to(dtype=torch.float32)
         grad = map_structure(lambda x: x.to(dtype=torch.float32), grad)
-    return result.detach().numpy(), grad.detach().numpy()
+    return result.detach().numpy(), grad[0].detach().numpy()
 
 
 def paddle_static(dtype=np.float32, bf16=False):
     if dtype == np.float32:
         input = input_data.astype(np.float32)
+        input_gradout = input_data_gradout.astype(np.float32)
     elif dtype == np.float16:
         input = input_data.astype(np.float16)
+        input_gradout = input_data_gradout.astype(np.float16)
     else:
         input = input_data
+        input_gradout = input_data_gradout
     if bf16:
         x = paddle.to_tensor(input)
         x = paddle.cast(x, dtype="uint16")
+        x_gradout = paddle.to_tensor(input_gradout)
+        x_gradout = paddle.cast(x_gradout, dtype="uint16")
     else:
         x = paddle.to_tensor(input)
+        x_gradout = paddle.to_tensor(input_gradout)
     x.stop_gradient = False
     result = paddle.jit.to_static(paddle.nn.functional.dropout)(x, training=False, mode="upscale_in_train", p=0.1)
-    grad = paddle.grad(result, x)
+    grad = paddle.grad(result, x, grad_outputs=x_gradout)
     if bf16:
         result = paddle.cast(result, dtype="float32")
         grad = map_structure(lambda x: paddle.cast(x, dtype="float32"), grad)
@@ -167,7 +187,7 @@ def test_paddle_static_stability_fp16():
         Compare(paddle_res, paddle_stability_res, rtol=1e-3, atol=1e-3)
         Compare(paddle_grad, paddle_stability_grad, rtol=1e-3, atol=1e-3)
 
-@pytest.mark.skip(reason="not support bf16")
+# @pytest.mark.skip(reason="not support bf16")
 def test_paddle_dynamic_vs_torch_bf16():
     """
     paddle dynamic vs torch bf16
@@ -178,7 +198,7 @@ def test_paddle_dynamic_vs_torch_bf16():
     Compare(paddle_res, torch_res, rtol=1e-2, atol=1e-2)
     Compare(paddle_grad, torch_grad, rtol=1e-2, atol=1e-2)
 
-@pytest.mark.skip(reason="not support bf16")
+# @pytest.mark.skip(reason="not support bf16")
 def test_paddle_static_vs_torch_bf16():
     """
     paddle static vs torch bf16
@@ -189,7 +209,7 @@ def test_paddle_static_vs_torch_bf16():
     Compare(paddle_res, torch_res, rtol=1e-2, atol=1e-2)
     Compare(paddle_grad, torch_grad, rtol=1e-2, atol=1e-2)
 
-@pytest.mark.skip(reason="not support bf16")
+# @pytest.mark.skip(reason="not support bf16")
 def test_paddle_dynamic_stability_bf16():
     """
     paddle dynamic stability bf16
@@ -201,7 +221,7 @@ def test_paddle_dynamic_stability_bf16():
         Compare(paddle_res, paddle_stability_res, rtol=1e-3, atol=1e-3)
         Compare(paddle_grad, paddle_stability_grad, rtol=1e-3, atol=1e-3)
 
-@pytest.mark.skip(reason="not support bf16")
+# @pytest.mark.skip(reason="not support bf16")
 def test_paddle_static_stability_bf16():
     """
     paddle staic stability bf16
