@@ -187,7 +187,7 @@ def test_paddle_static_stability_fp16():
         Compare(paddle_res, paddle_stability_res, rtol=1e-3, atol=1e-3)
         Compare(paddle_grad, paddle_stability_grad, rtol=1e-3, atol=1e-3)
 
-@pytest.mark.skip(reason="not support bf16")
+# @pytest.mark.skip(reason="not support bf16")
 def test_paddle_dynamic_vs_torch_bf16():
     """
     paddle dynamic vs torch bf16
@@ -198,7 +198,7 @@ def test_paddle_dynamic_vs_torch_bf16():
     Compare(paddle_res, torch_res, rtol=1e-2, atol=1e-2)
     Compare(paddle_grad, torch_grad, rtol=1e-2, atol=1e-2)
 
-@pytest.mark.skip(reason="not support bf16")
+# @pytest.mark.skip(reason="not support bf16")
 def test_paddle_static_vs_torch_bf16():
     """
     paddle static vs torch bf16
@@ -209,7 +209,7 @@ def test_paddle_static_vs_torch_bf16():
     Compare(paddle_res, torch_res, rtol=1e-2, atol=1e-2)
     Compare(paddle_grad, torch_grad, rtol=1e-2, atol=1e-2)
 
-@pytest.mark.skip(reason="not support bf16")
+# @pytest.mark.skip(reason="not support bf16")
 def test_paddle_dynamic_stability_bf16():
     """
     paddle dynamic stability bf16
@@ -221,7 +221,7 @@ def test_paddle_dynamic_stability_bf16():
         Compare(paddle_res, paddle_stability_res, rtol=1e-3, atol=1e-3)
         Compare(paddle_grad, paddle_stability_grad, rtol=1e-3, atol=1e-3)
 
-@pytest.mark.skip(reason="not support bf16")
+# @pytest.mark.skip(reason="not support bf16")
 def test_paddle_static_stability_bf16():
     """
     paddle staic stability bf16
