@@ -262,7 +262,7 @@ def test_paddle_static_vs_torch_bf16():
     paddle static vs torch bf16
     :return:
     """
-    paddle_res, paddle_grad, paddle_y_grad = paddle_dynamic(np.float32, True)
+    paddle_res, paddle_grad, paddle_y_grad = paddle_static(np.float32, True)
     torch_res, torch_grad, torch_y_grad = torch_dynamic(np.float32, True)
     Compare(paddle_res, torch_res, rtol=1e-2, atol=1e-2)
     Compare(paddle_grad, torch_grad, rtol=1e-2, atol=1e-2)
